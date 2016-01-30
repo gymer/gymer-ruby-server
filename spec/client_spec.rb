@@ -29,18 +29,27 @@ describe Gymer::Client do
 
   describe '#url' do
     it 'build full URL for path' do
-      expect(@client.url('/events')).to eq('http://api.gymer.com/apps/1/events')
+      expect(@client.url('/events')).to eq('http://api.gymer.com/v1/apps/1/events')
     end
 
     it 'with port if setted' do
       @client.port = 8080
-      expect(@client.url('/events')).to eq('http://api.gymer.com:8080/apps/1/events')
+      expect(@client.url('/events')).to eq('http://api.gymer.com:8080/v1/apps/1/events')
     end
   end
 
-  # describe '#push' do
-  #   it 'send POST request to API' do
-  #     @client.push('test_channel', 'test_event', {title: 'Hi', subject: 'To my friend'})
-  #   end
-  # end
+  describe '#push' do
+    before :each do
+      @path = %r{/v1/apps/1/events}
+      stub_request(:post, @path).to_return(status: 200, body: "{}")
+    end
+
+    it 'send POST request to API' do
+      request_url = "http://#{@client.client_access_token}:#{@client.server_access_token}@api.gymer.com/v1/apps/1/events"
+      @client.push('test_channel', 'test_event', {title: 'Hi', subject: 'To my friend'})
+      
+      expect(WebMock).to have_requested(:post, request_url)
+        .with(:body => {event: "test_event", channel: "test_channel", data: {title: 'Hi', subject: 'To my friend'}}.to_json)
+    end
+  end
 end

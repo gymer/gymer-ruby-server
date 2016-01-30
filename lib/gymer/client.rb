@@ -1,14 +1,18 @@
 module Gymer
   class Client
-    attr_accessor :scheme, :host, :port, :app_id, :client_access_token, :server_access_token
+    attr_accessor :scheme, :host, :port, :api_version, :app_id, :client_access_token, :server_access_token
 
     def initialize(options = {})
       options = {
         :scheme => 'http',
         :host => 'api.gymer.com',
+        :api_version => 'v1',
       }.merge(options)
-      @scheme, @host, @port, @app_id, @client_access_token, @server_access_token = options.values_at(
-        :scheme, :host, :port, :app_id, :client_access_token, :server_access_token
+
+      puts options
+
+      @scheme, @host, @port, @api_version, @app_id, @client_access_token, @server_access_token = options.values_at(
+        :scheme, :host, :port, :api_version, :app_id, :client_access_token, :server_access_token
       )
 
       # Default timeouts
@@ -23,15 +27,20 @@ module Gymer
         :scheme => @scheme,
         :host => @host,
         :port => @port,
-        :path => "/apps/#{@app_id}#{path}"
+        :path => "/#{@api_version}/apps/#{@app_id}#{path}"
       }).to_s
     end
 
     def push(channel, event, data)
       url = url("/events")
+      response = post("/events", {event: event, channel: channel, data: data})
+      JSON.parse(response)
+    end
+
+    def post(path, data = {})
+      url = url(path)
       auth = {:username => @client_access_token, :password => @server_access_token}
-      response = HTTParty.post(url, basic_auth: auth, body: {event: event, channel: channel, data: data})
-      JSON.parse(response.body)
+      HTTParty.post(url, basic_auth: auth, body: data.to_json)
     end
 
     def get(path)
