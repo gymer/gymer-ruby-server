@@ -32,9 +32,8 @@ module Gymer
     end
 
     def push(channel, event, data)
-      url = url("/events")
       response = post("/events", {event: event, channel: channel, data: data})
-      JSON.parse(response)
+      JSON.parse(response.body)
     end
 
     def post(path, data = {})
@@ -43,9 +42,14 @@ module Gymer
       HTTParty.post(url, basic_auth: auth, body: data.to_json)
     end
 
-    def get(path)
-      url = "https://api.groovehq.com/v1/#{path}"
-      response = HTTParty.get(url, headers: { 'Authorization' => "Bearer #{@access_token}" })
+    def get(path, params = {})
+      url = url(path)
+      auth = {:username => @client_access_token, :password => @server_access_token}
+      HTTParty.get(url, basic_auth: auth)
+    end
+
+    def channel(name)
+      response = get("/channels/#{name}")
       JSON.parse(response.body)
     end
   end

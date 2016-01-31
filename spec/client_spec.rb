@@ -41,15 +41,33 @@ describe Gymer::Client do
   describe '#push' do
     before :each do
       @path = %r{/v1/apps/1/events}
-      stub_request(:post, @path).to_return(status: 200, body: "{}")
+      stub_request(:post, @path).to_return(status: 200, body: {pushed_clients: 1}.to_json)
     end
 
     it 'send POST request to API' do
       request_url = "http://#{@client.client_access_token}:#{@client.server_access_token}@api.gymer.com/v1/apps/1/events"
-      @client.push('test_channel', 'test_event', {title: 'Hi', subject: 'To my friend'})
-      
+      response = @client.push('test_channel', 'test_event', {title: 'Hi', subject: 'To my friend'})
+
       expect(WebMock).to have_requested(:post, request_url)
         .with(:body => {event: "test_event", channel: "test_channel", data: {title: 'Hi', subject: 'To my friend'}}.to_json)
+
+      expect(response["pushed_clients"]).to eq(1)
+    end
+  end
+
+  describe '#channel' do
+    before :each do
+      @path = %r{/v1/apps/1/channels/my-public-channel}
+      stub_request(:get, @path).to_return(status: 200, body: {subscribers: 1, used: true}.to_json)
+    end
+
+    it 'send GET request to API' do
+      request_url = "http://#{@client.client_access_token}:#{@client.server_access_token}@api.gymer.com/v1/apps/1/channels/my-public-channel"
+      response = @client.channel('my-public-channel')
+
+      expect(WebMock).to have_requested(:get, request_url)
+      expect(response["used"]).to eq(true)
+      expect(response["subscribers"]).to eq(1)
     end
   end
 end
