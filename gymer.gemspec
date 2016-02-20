@@ -28,11 +28,11 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "httparty", "~> 0.13"
+  spec.add_dependency "httplog"
 
   spec.add_development_dependency "bundler", "~> 1.9"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~> 3.2"
-  spec.add_development_dependency "httplog"
   spec.add_development_dependency "webmock"
   spec.add_development_dependency "pry"
 end

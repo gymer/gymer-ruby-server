@@ -1,4 +1,5 @@
 require "httparty"
+require "httplog"
 require "gymer/version"
 require "gymer/client"
 
