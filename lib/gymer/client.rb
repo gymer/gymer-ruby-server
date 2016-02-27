@@ -1,33 +1,42 @@
 module Gymer
   class Client
-    attr_accessor :scheme, :host, :port, :api_version, :app_id, :client_access_token, :server_access_token
+    class << self
+      attr_writer :config
+    end
+
+    def self.config
+      @config ||= Configuration.new
+    end
+
+    def self.configure
+      yield config
+    end
+
+    def self.reset
+      @config = Configuration.new
+    end
+
+    attr_accessor :config
 
     def initialize(options = {})
-      options = {
-        :scheme => 'http',
-        :host => 'api.gymer.com',
-        :api_version => 'v1',
-      }.merge(options)
+      @config = self.class.config.dup
 
-      puts options
+      options.each_pair do |key, value|
+        @config.send("#{key}=", value)
+      end
+      # options = @@default_options.merge(options)
 
-      @scheme, @host, @port, @api_version, @app_id, @client_access_token, @server_access_token = options.values_at(
-        :scheme, :host, :port, :api_version, :app_id, :client_access_token, :server_access_token
-      )
-
-      # Default timeouts
-      @connect_timeout = 5
-      @send_timeout = 5
-      @receive_timeout = 5
-      @keep_alive_timeout = 30
+      # @scheme, @host, @port, @api_version, @app_id, @config.client_access_token, @config.server_access_token = options.values_at(
+      #   :scheme, :host, :port, :api_version, :app_id, :client_access_token, :server_access_token
+      # )
     end
 
     def url(path = nil)
       URI::Generic.build({
-        :scheme => @scheme,
-        :host => @host,
-        :port => @port,
-        :path => "/#{@api_version}/apps/#{@app_id}#{path}"
+        :scheme => @config.scheme,
+        :host => @config.host,
+        :port => @config.port,
+        :path => "/#{@config.api_version}/apps/#{@config.app_id}#{path}"
       }).to_s
     end
 
@@ -38,13 +47,13 @@ module Gymer
 
     def post(path, data = {})
       url = url(path)
-      auth = {:username => @client_access_token, :password => @server_access_token}
+      auth = {:username => @config.client_access_token, :password => @config.server_access_token}
       HTTParty.post(url, basic_auth: auth, body: data.to_json)
     end
 
     def get(path, params = {})
       url = url(path)
-      auth = {:username => @client_access_token, :password => @server_access_token}
+      auth = {:username => @config.client_access_token, :password => @config.server_access_token}
       HTTParty.get(url, basic_auth: auth)
     end
 
